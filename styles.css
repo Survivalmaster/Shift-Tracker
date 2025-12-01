@@ -1,0 +1,419 @@
+/* --------------------------------------------------
+   Boston Borough Council – Shift Tracker Styling
+   -------------------------------------------------- */
+
+:root {
+  /* Palette – council / gov style */
+  --page-bg: #f3f2f1;
+  --panel-bg: #ffffff;
+  --border-subtle: #d8d8d8;
+  --border-strong: #b1b4b6;
+  --text-main: #0b0c0c;
+  --text-muted: #505a5f;
+
+  --accent: #005ea5;          /* primary blue */
+  --accent-light: #e5f3ff;    /* pale blue background */
+  --accent-soft-border: #7fb5e7;
+
+  --danger: #d4351c;          /* govuk style red */
+  --danger-light: #fbe3e1;
+
+  --radius-card: 4px;
+  --radius-pill: 999px;
+
+  --shadow-soft: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+
+  --gap: 1rem;
+  --transition-fast: 0.15s ease-out;
+}
+
+/* Reset / base -------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  background: var(--page-bg);
+  color: var(--text-main);
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+}
+
+/* Layout shell -------------------------------------------------------- */
+
+.app-shell {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Header -------------------------------------------------------------- */
+
+.app-header {
+  background: var(--panel-bg);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-soft);
+  padding: 0.9rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.title-wrap h1 {
+  margin: 0 0 0.2rem;
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.title-wrap .subtitle {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+/* Status badge – matches council-style pill tag */
+
+.header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: #f8f8f8;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  box-shadow: var(--shadow-subtle);
+}
+
+.header-badge .dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: #6f777b; /* neutral when idle */
+}
+
+.header-badge.active .dot {
+  background: #00703c; /* green active indicator */
+}
+
+/* Main content -------------------------------------------------------- */
+
+.app-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Card component ------------------------------------------------------ */
+
+.card {
+  background: var(--panel-bg);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-subtle);
+  padding: 1rem 1.25rem;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid #ededed;
+  padding-bottom: 0.4rem;
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.card-body {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+/* Small label chip (e.g. "Max 5") */
+
+.chip {
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.78rem;
+  border: 1px solid var(--border-strong);
+  background: #f5f5f5;
+  color: var(--text-muted);
+}
+
+/* Shift card specifics ------------------------------------------------ */
+
+.shift-card .shift-times {
+  font-size: 0.92rem;
+  margin-bottom: 0.75rem;
+}
+
+.shift-card .shift-times p {
+  margin: 0.2rem 0;
+}
+
+.shift-card .hint {
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* Buttons ------------------------------------------------------------- */
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* Base button */
+
+.btn {
+  border: 1px solid var(--border-strong);
+  background: #f3f2f1;
+  color: var(--text-main);
+  padding: 0.55rem 1.1rem;
+  border-radius: 3px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  text-decoration: none;
+  transition: background var(--transition-fast), border-color var(--transition-fast),
+    box-shadow var(--transition-fast), transform var(--transition-fast), color var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+/* Primary action */
+
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+/* Danger */
+
+.btn.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #ffffff;
+}
+
+/* Ghost / neutral */
+
+.btn.ghost {
+  background: #f3f2f1;
+  border-color: var(--border-subtle);
+  color: var(--text-muted);
+}
+
+/* Small size */
+
+.btn.small {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.82rem;
+}
+
+/* States */
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  box-shadow: none;
+  transform: none;
+}
+
+.btn:not(:disabled):hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.btn:not(:disabled):active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Patrol grid --------------------------------------------------------- */
+
+.patrol-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--gap);
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .patrol-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  body {
+    padding: 1rem 0.75rem;
+  }
+
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .patrol-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Patrol cards -------------------------------------------------------- */
+
+.patrol-card {
+  position: relative;
+  padding: 0.7rem 0.7rem 0.75rem;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border-subtle);
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-height: 120px;
+}
+
+.patrol-card.active {
+  border-color: var(--accent-soft-border);
+  background: var(--accent-light);
+}
+
+.patrol-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+}
+
+.patrol-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+/* Status pill */
+
+.pill {
+  font-size: 0.76rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: #f9f9f9;
+  white-space: nowrap;
+}
+
+.pill.idle {
+  border-style: dashed;
+}
+
+.pill.active {
+  background: var(--accent-light);
+  border-color: var(--accent-soft-border);
+  color: #144e7a;
+}
+
+.pill.done {
+  background: #e6f4ea;
+  border-color: #0b6b3a;
+  color: #0b6b3a;
+}
+
+/* Patrol times text */
+
+.patrol-times {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+}
+
+.patrol-times p {
+  margin: 0.08rem 0;
+}
+
+/* Summary section ----------------------------------------------------- */
+
+.summary-card {
+  margin-bottom: 1rem;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.summary-row span.label {
+  color: var(--text-muted);
+}
+
+.summary-row span.value {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.summary-row.total {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Highlight callout for total patrol time */
+
+.summary-highlight {
+  margin-top: 0.65rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: var(--radius-card);
+  background: var(--accent-light);
+  border: 1px solid var(--accent-soft-border);
+  font-size: 0.88rem;
+  color: var(--text-main);
+}
+
+.summary-highlight strong {
+  color: var(--text-main);
+}
+
+/* Utility ------------------------------------------------------------- */
+
+.muted {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}

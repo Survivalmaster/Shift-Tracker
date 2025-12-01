@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shift Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header glass">
+      <div class="title-wrap">
+        <h1>Shift Tracker</h1>
+        <p id="todayLabel" class="subtitle"></p>
+      </div>
+      <div class="header-badge">
+        <span class="dot"></span>
+        <span id="shiftStatus">No active shift</span>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <!-- Shift Controls -->
+      <section class="card glass shift-card">
+        <div class="card-header">
+          <h2>Current Shift</h2>
+        </div>
+        <div class="card-body">
+          <div id="shiftTimes" class="shift-times">
+            <p>Start a shift to begin tracking.</p>
+          </div>
+          <div class="button-row">
+            <button id="startShiftBtn" class="btn primary">Start Shift</button>
+            <button id="endShiftBtn" class="btn danger" disabled>Finish Shift</button>
+            <button id="resetDataBtn" class="btn ghost">Reset All Data</button>
+          </div>
+          <p class="hint">
+            You can only have one active shift at a time. Within a shift you’ll get
+            <strong>5 patrol slots</strong> run one after another.
+          </p>
+        </div>
+      </section>
+
+      <!-- Patrol Slots -->
+      <section class="card glass">
+        <div class="card-header">
+          <h2>Patrols this Shift</h2>
+          <span class="chip">Max 5</span>
+        </div>
+        <div id="patrolsContainer" class="patrol-grid">
+          <!-- Patrol cards injected by JS -->
+        </div>
+      </section>
+
+      <!-- Summary -->
+      <section class="card glass summary-card">
+        <div class="card-header">
+          <h2>Shift Summary</h2>
+        </div>
+        <div id="summaryContainer" class="card-body">
+          <p>No completed shift yet. Finish a shift to see your summary here.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
