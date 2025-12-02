@@ -85,13 +85,13 @@ body {
   color: var(--text-main);
 }
 
-.title-wrap .subtitle {
+.title-wrap .subtitle isplay: 0;
   margin: 0;
   font-size: 0.88rem;
   color: var(--text-muted);
 }
 
-/* Status badge – matches council-style pill tag */
+/* Status badge – council-style pill */
 
 .header-badge {
   display: inline-flex;
@@ -157,7 +157,7 @@ body {
   color: var(--text-muted);
 }
 
-/* Small label chip (e.g. "Max 5") */
+/* Small label chip */
 
 .chip {
   padding: 0.15rem 0.6rem;
@@ -209,12 +209,16 @@ body {
   justify-content: center;
   gap: 0.25rem;
   text-decoration: none;
-  transition: background var(--transition-fast), border-color var(--transition-fast),
-    box-shadow var(--transition-fast), transform var(--transition-fast), color var(--transition-fast),
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast),
+    color var(--transition-fast),
     opacity var(--transition-fast);
 }
 
-/* Primary action */
+/* Primary */
 
 .btn.primary {
   background: var(--accent);
@@ -238,14 +242,14 @@ body {
   color: var(--text-muted);
 }
 
-/* Small size */
+/* Small */
 
 .btn.small {
   padding: 0.4rem 0.8rem;
   font-size: 0.82rem;
 }
 
-/* States */
+/* Button states */
 
 .btn:disabled {
   cursor: not-allowed;
@@ -272,7 +276,6 @@ body {
   gap: var(--gap);
 }
 
-/* Responsive adjustments */
 @media (max-width: 900px) {
   .patrol-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -354,7 +357,7 @@ body {
   color: #0b6b3a;
 }
 
-/* Patrol times text */
+/* Patrol times */
 
 .patrol-times {
   font-size: 0.82rem;
@@ -366,7 +369,7 @@ body {
   margin: 0.08rem 0;
 }
 
-/* Summary section ----------------------------------------------------- */
+/* Summary ------------------------------------------------------------- */
 
 .summary-card {
   margin-bottom: 1rem;
@@ -395,7 +398,7 @@ body {
   border-top: 1px solid #e0e0e0;
 }
 
-/* Highlight callout for total patrol time */
+/* Highlight callout */
 
 .summary-highlight {
   margin-top: 0.65rem;
@@ -411,7 +414,7 @@ body {
   color: var(--text-main);
 }
 
-/* Utility ------------------------------------------------------------- */
+/* Utility */
 
 .muted {
   color: var(--text-muted);

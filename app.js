@@ -78,7 +78,7 @@ function loadState() {
       state.currentShift = parsed.currentShift || null;
       state.lastCompletedShift = parsed.lastCompletedShift || null;
 
-      // Backwards-compat: ensure engagements exist
+      // ensure engagements exist
       if (state.currentShift && typeof state.currentShift.engagements !== "number") {
         state.currentShift.engagements = 0;
       }
@@ -102,7 +102,7 @@ function saveState() {
   }
 }
 
-// ---------- DOM refs (declared, not yet assigned) ----------
+// ---------- DOM refs ----------
 
 const todayLabelEl = document.getElementById("todayLabel");
 const shiftStatusEl = document.getElementById("shiftStatus");
@@ -114,7 +114,7 @@ const patrolsContainer = document.getElementById("patrolsContainer");
 const summaryContainer = document.getElementById("summaryContainer");
 const headerBadgeEl = document.querySelector(".header-badge");
 
-// Engagement elements will be populated after DOM is fully ready
+// Engagement elements are set after DOMContentLoaded
 let engagementCountEl;
 let engagementMinusBtn;
 let engagementPlusBtn;
@@ -123,7 +123,7 @@ let engagementPlusBtn;
 
 function startShift() {
   if (state.currentShift && !state.currentShift.endTime) {
-    return; // already active, safety check
+    return; // already active
   }
 
   const now = nowIso();
@@ -298,7 +298,6 @@ function renderShiftSection() {
     }
   }
 
-  // Enable/disable reset button based on whether there's anything to clear
   const hasAnyData = state.currentShift || state.lastCompletedShift;
   resetDataBtn.disabled = !hasAnyData;
 }
@@ -307,7 +306,6 @@ function renderPatrols() {
   patrolsContainer.innerHTML = "";
 
   if (!state.currentShift) {
-    // Show static cards when there's no active shift
     for (let i = 0; i < 5; i++) {
       const card = document.createElement("div");
       card.className = "patrol-card";
@@ -379,7 +377,6 @@ function renderPatrols() {
     const previousDone = idx === 0 || (prev && prev.endTime);
 
     if (!patrol.startTime && !patrol.endTime) {
-      // Not started
       btn.textContent = "Start patrol";
       btn.classList.add("primary");
       const canStart =
@@ -392,7 +389,6 @@ function renderPatrols() {
         btn.addEventListener("click", () => startPatrol(idx));
       }
     } else if (patrol.startTime && !patrol.endTime) {
-      // Active
       btn.textContent = "End patrol";
       btn.classList.add("danger");
       btn.disabled = shiftEnded;
@@ -400,7 +396,6 @@ function renderPatrols() {
         btn.addEventListener("click", () => endPatrol(idx));
       }
     } else {
-      // Completed - no button or disabled ghost
       btn.textContent = "Completed";
       btn.classList.add("ghost");
       btn.disabled = true;
@@ -496,7 +491,7 @@ function render() {
 // ---------- Init ----------
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Now that DOM is ready, grab engagement elements and wire events
+  // engagement elements after DOM is ready
   engagementCountEl = document.getElementById("engagementCount");
   engagementMinusBtn = document.getElementById("engagementMinusBtn");
   engagementPlusBtn = document.getElementById("engagementPlusBtn");
