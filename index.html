@@ -20,7 +20,7 @@
     </header>
 
     <main class="app-main">
-      <!-- Shift Controls -->
+            <!-- Shift Controls -->
       <section class="card shift-card">
         <div class="card-header">
           <h2>Current Shift</h2>
@@ -53,8 +53,35 @@
               <button id="engagementPlusBtn" class="btn small primary">+</button>
             </div>
           </div>
+
+          <!-- Street drinkers counter -->
+          <div class="engagement-panel">
+            <div class="engagement-label-group">
+              <span class="label-title">Street drinkers this shift</span>
+              <span class="label-hint">Record each time you deal with street drinking.</span>
+            </div>
+            <div class="engagement-controls">
+              <button id="streetMinusBtn" class="btn small ghost">−</button>
+              <span id="streetCount" class="engagement-count">0</span>
+              <button id="streetPlusBtn" class="btn small primary">+</button>
+            </div>
+          </div>
+
+          <!-- ASB incidents counter -->
+          <div class="engagement-panel">
+            <div class="engagement-label-group">
+              <span class="label-title">ASB incidents this shift</span>
+              <span class="label-hint">Simple tally of anti-social behaviour incidents.</span>
+            </div>
+            <div class="engagement-controls">
+              <button id="asbMinusBtn" class="btn small ghost">−</button>
+              <span id="asbCount" class="engagement-count">0</span>
+              <button id="asbPlusBtn" class="btn small primary">+</button>
+            </div>
+          </div>
         </div>
       </section>
+
 
       <!-- Patrol Slots -->
       <section class="card">

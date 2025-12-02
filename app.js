@@ -52,19 +52,46 @@ function getPatrolDurationMs(patrol) {
   return new Date(patrol.endTime) - new Date(patrol.startTime);
 }
 
-// Engagement helpers
-function getCurrentEngagements() {
-  if (!state.currentShift) return 0;
-  const value = state.currentShift.engagements;
+// ---------- Counter helpers ----------
+
+function safeCounter(value) {
   return typeof value === "number" && !isNaN(value) && value >= 0 ? value : 0;
 }
 
+// Engagement
+function getCurrentEngagements() {
+  if (!state.currentShift) return 0;
+  return safeCounter(state.currentShift.engagements);
+}
 function setCurrentEngagements(newValue) {
   if (!state.currentShift || state.currentShift.endTime) return;
-  const safe = Math.max(0, Number.isFinite(newValue) ? newValue : 0);
-  state.currentShift.engagements = safe;
+  state.currentShift.engagements = Math.max(0, newValue);
   saveState();
-  renderShiftSection(); // refresh shift + engagement bits
+  renderShiftSection();
+}
+
+// Street drinkers
+function getCurrentStreetDrinkers() {
+  if (!state.currentShift) return 0;
+  return safeCounter(state.currentShift.streetDrinkers);
+}
+function setCurrentStreetDrinkers(newValue) {
+  if (!state.currentShift || state.currentShift.endTime) return;
+  state.currentShift.streetDrinkers = Math.max(0, newValue);
+  saveState();
+  renderShiftSection();
+}
+
+// ASB incidents
+function getCurrentAsbIncidents() {
+  if (!state.currentShift) return 0;
+  return safeCounter(state.currentShift.asbIncidents);
+}
+function setCurrentAsbIncidents(newValue) {
+  if (!state.currentShift || state.currentShift.endTime) return;
+  state.currentShift.asbIncidents = Math.max(0, newValue);
+  saveState();
+  renderShiftSection();
 }
 
 // ---------- Persistence ----------
@@ -78,15 +105,28 @@ function loadState() {
       state.currentShift = parsed.currentShift || null;
       state.lastCompletedShift = parsed.lastCompletedShift || null;
 
-      // ensure engagements exist
-      if (state.currentShift && typeof state.currentShift.engagements !== "number") {
-        state.currentShift.engagements = 0;
+      // ensure counters exist (backwards compatible)
+      if (state.currentShift) {
+        if (typeof state.currentShift.engagements !== "number") {
+          state.currentShift.engagements = 0;
+        }
+        if (typeof state.currentShift.streetDrinkers !== "number") {
+          state.currentShift.streetDrinkers = 0;
+        }
+        if (typeof state.currentShift.asbIncidents !== "number") {
+          state.currentShift.asbIncidents = 0;
+        }
       }
-      if (
-        state.lastCompletedShift &&
-        typeof state.lastCompletedShift.engagements !== "number"
-      ) {
-        state.lastCompletedShift.engagements = 0;
+      if (state.lastCompletedShift) {
+        if (typeof state.lastCompletedShift.engagements !== "number") {
+          state.lastCompletedShift.engagements = 0;
+        }
+        if (typeof state.lastCompletedShift.streetDrinkers !== "number") {
+          state.lastCompletedShift.streetDrinkers = 0;
+        }
+        if (typeof state.lastCompletedShift.asbIncidents !== "number") {
+          state.lastCompletedShift.asbIncidents = 0;
+        }
       }
     }
   } catch (e) {
@@ -114,10 +154,10 @@ const patrolsContainer = document.getElementById("patrolsContainer");
 const summaryContainer = document.getElementById("summaryContainer");
 const headerBadgeEl = document.querySelector(".header-badge");
 
-// Engagement elements are set after DOMContentLoaded
-let engagementCountEl;
-let engagementMinusBtn;
-let engagementPlusBtn;
+// Engagement / incident elements (wired in DOMContentLoaded)
+let engagementCountEl, engagementMinusBtn, engagementPlusBtn;
+let streetCountEl, streetMinusBtn, streetPlusBtn;
+let asbCountEl, asbMinusBtn, asbPlusBtn;
 
 // ---------- Actions ----------
 
@@ -135,6 +175,8 @@ function startShift() {
     startTime: now,
     endTime: null,
     engagements: 0,
+    streetDrinkers: 0,
+    asbIncidents: 0,
     patrols: Array.from({ length: 5 }).map((_, idx) => ({
       index: idx + 1,
       startTime: null,
@@ -228,11 +270,32 @@ function incrementEngagements() {
   const current = getCurrentEngagements();
   setCurrentEngagements(current + 1);
 }
-
 function decrementEngagements() {
   const current = getCurrentEngagements();
   if (current <= 0) return;
   setCurrentEngagements(current - 1);
+}
+
+// Street drinkers events
+function incrementStreetDrinkers() {
+  const current = getCurrentStreetDrinkers();
+  setCurrentStreetDrinkers(current + 1);
+}
+function decrementStreetDrinkers() {
+  const current = getCurrentStreetDrinkers();
+  if (current <= 0) return;
+  setCurrentStreetDrinkers(current - 1);
+}
+
+// ASB incidents events
+function incrementAsbIncidents() {
+  const current = getCurrentAsbIncidents();
+  setCurrentAsbIncidents(current + 1);
+}
+function decrementAsbIncidents() {
+  const current = getCurrentAsbIncidents();
+  if (current <= 0) return;
+  setCurrentAsbIncidents(current - 1);
 }
 
 // ---------- Rendering ----------
@@ -262,9 +325,17 @@ function renderShiftSection() {
     startShiftBtn.disabled = false;
     endShiftBtn.disabled = true;
 
+    // reset counters and disable buttons
     if (engagementCountEl) engagementCountEl.textContent = "0";
+    if (streetCountEl) streetCountEl.textContent = "0";
+    if (asbCountEl) asbCountEl.textContent = "0";
+
     if (engagementMinusBtn) engagementMinusBtn.disabled = true;
     if (engagementPlusBtn) engagementPlusBtn.disabled = true;
+    if (streetMinusBtn) streetMinusBtn.disabled = true;
+    if (streetPlusBtn) streetPlusBtn.disabled = true;
+    if (asbMinusBtn) asbMinusBtn.disabled = true;
+    if (asbPlusBtn) asbPlusBtn.disabled = true;
   } else {
     let html = `
       <p><strong>Date:</strong> ${formatDate(shift.startTime)}</p>
@@ -285,16 +356,30 @@ function renderShiftSection() {
     startShiftBtn.disabled = !!shift && !shift.endTime;
     endShiftBtn.disabled = !!shift.endTime || !shift;
 
-    // Engagement controls
+    const shiftEnded = !!shift.endTime;
+
+    // Engagements
     const engagements = getCurrentEngagements();
     if (engagementCountEl) engagementCountEl.textContent = engagements.toString();
-
-    const shiftEnded = !!shift.endTime;
-    if (engagementPlusBtn) {
-      engagementPlusBtn.disabled = shiftEnded;
-    }
+    if (engagementPlusBtn) engagementPlusBtn.disabled = shiftEnded;
     if (engagementMinusBtn) {
       engagementMinusBtn.disabled = shiftEnded || engagements <= 0;
+    }
+
+    // Street drinkers
+    const street = getCurrentStreetDrinkers();
+    if (streetCountEl) streetCountEl.textContent = street.toString();
+    if (streetPlusBtn) streetPlusBtn.disabled = shiftEnded;
+    if (streetMinusBtn) {
+      streetMinusBtn.disabled = shiftEnded || street <= 0;
+    }
+
+    // ASB incidents
+    const asb = getCurrentAsbIncidents();
+    if (asbCountEl) asbCountEl.textContent = asb.toString();
+    if (asbPlusBtn) asbPlusBtn.disabled = shiftEnded;
+    if (asbMinusBtn) {
+      asbMinusBtn.disabled = shiftEnded || asb <= 0;
     }
   }
 
@@ -439,7 +524,9 @@ function renderSummary() {
     patrolLines = `<p class="muted">No patrols were started during this shift.</p>`;
   }
 
-  const engagements = typeof shift.engagements === "number" ? shift.engagements : 0;
+  const engagements = safeCounter(shift.engagements);
+  const street = safeCounter(shift.streetDrinkers);
+  const asb = safeCounter(shift.asbIncidents);
 
   summaryContainer.innerHTML = `
     <div class="summary-row">
@@ -471,12 +558,23 @@ function renderSummary() {
       <span class="label">Public engagements (this shift)</span>
       <span class="value">${engagements}</span>
     </div>
+    <div class="summary-row">
+      <span class="label">Street drinkers (this shift)</span>
+      <span class="value">${street}</span>
+    </div>
+    <div class="summary-row">
+      <span class="label">ASB incidents (this shift)</span>
+      <span class="value">${asb}</span>
+    </div>
 
     <div class="summary-highlight">
       <strong>Summary:</strong>
       You spent <strong>${formatDuration(
         totalPatrolMs
-      )}</strong> actively on patrols and recorded <strong>${engagements}</strong> public engagement(s) this shift.
+      )}</strong> actively on patrols and recorded
+      <strong>${engagements}</strong> public engagement(s),
+      <strong>${street}</strong> street drinker interaction(s), and
+      <strong>${asb}</strong> ASB incident(s) this shift.
     </div>
   `;
 }
@@ -491,10 +589,18 @@ function render() {
 // ---------- Init ----------
 
 document.addEventListener("DOMContentLoaded", () => {
-  // engagement elements after DOM is ready
+  // grab engagement / incident elements
   engagementCountEl = document.getElementById("engagementCount");
   engagementMinusBtn = document.getElementById("engagementMinusBtn");
   engagementPlusBtn = document.getElementById("engagementPlusBtn");
+
+  streetCountEl = document.getElementById("streetCount");
+  streetMinusBtn = document.getElementById("streetMinusBtn");
+  streetPlusBtn = document.getElementById("streetPlusBtn");
+
+  asbCountEl = document.getElementById("asbCount");
+  asbMinusBtn = document.getElementById("asbMinusBtn");
+  asbPlusBtn = document.getElementById("asbPlusBtn");
 
   loadState();
   render();
@@ -503,10 +609,12 @@ document.addEventListener("DOMContentLoaded", () => {
   endShiftBtn.addEventListener("click", endShift);
   resetDataBtn.addEventListener("click", resetAllData);
 
-  if (engagementPlusBtn) {
-    engagementPlusBtn.addEventListener("click", incrementEngagements);
-  }
-  if (engagementMinusBtn) {
-    engagementMinusBtn.addEventListener("click", decrementEngagements);
-  }
+  if (engagementPlusBtn) engagementPlusBtn.addEventListener("click", incrementEngagements);
+  if (engagementMinusBtn) engagementMinusBtn.addEventListener("click", decrementEngagements);
+
+  if (streetPlusBtn) streetPlusBtn.addEventListener("click", incrementStreetDrinkers);
+  if (streetMinusBtn) streetMinusBtn.addEventListener("click", decrementStreetDrinkers);
+
+  if (asbPlusBtn) asbPlusBtn.addEventListener("click", incrementAsbIncidents);
+  if (asbMinusBtn) asbMinusBtn.addEventListener("click", decrementAsbIncidents);
 });
