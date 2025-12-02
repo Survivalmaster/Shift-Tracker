@@ -52,13 +52,13 @@ function getPatrolDurationMs(patrol) {
   return new Date(patrol.endTime) - new Date(patrol.startTime);
 }
 
-// ---------- Counter helpers ----------
-
 function safeCounter(value) {
   return typeof value === "number" && !isNaN(value) && value >= 0 ? value : 0;
 }
 
-// Engagement
+// ---------- Counter helpers ----------
+
+// Engagements
 function getCurrentEngagements() {
   if (!state.currentShift) return 0;
   return safeCounter(state.currentShift.engagements);
@@ -105,7 +105,6 @@ function loadState() {
       state.currentShift = parsed.currentShift || null;
       state.lastCompletedShift = parsed.lastCompletedShift || null;
 
-      // ensure counters exist (backwards compatible)
       if (state.currentShift) {
         if (typeof state.currentShift.engagements !== "number") {
           state.currentShift.engagements = 0;
@@ -142,19 +141,19 @@ function saveState() {
   }
 }
 
-// ---------- DOM refs ----------
+// ---------- DOM refs (assigned after DOMContentLoaded) ----------
 
-const todayLabelEl = document.getElementById("todayLabel");
-const shiftStatusEl = document.getElementById("shiftStatus");
-const shiftTimesEl = document.getElementById("shiftTimes");
-const startShiftBtn = document.getElementById("startShiftBtn");
-const endShiftBtn = document.getElementById("endShiftBtn");
-const resetDataBtn = document.getElementById("resetDataBtn");
-const patrolsContainer = document.getElementById("patrolsContainer");
-const summaryContainer = document.getElementById("summaryContainer");
-const headerBadgeEl = document.querySelector(".header-badge");
+let todayLabelEl;
+let shiftStatusEl;
+let shiftTimesEl;
+let startShiftBtn;
+let endShiftBtn;
+let resetDataBtn;
+let patrolsContainer;
+let summaryContainer;
+let headerBadgeEl;
 
-// Engagement / incident elements (wired in DOMContentLoaded)
+// Counters
 let engagementCountEl, engagementMinusBtn, engagementPlusBtn;
 let streetCountEl, streetMinusBtn, streetPlusBtn;
 let asbCountEl, asbMinusBtn, asbPlusBtn;
@@ -325,7 +324,6 @@ function renderShiftSection() {
     startShiftBtn.disabled = false;
     endShiftBtn.disabled = true;
 
-    // reset counters and disable buttons
     if (engagementCountEl) engagementCountEl.textContent = "0";
     if (streetCountEl) streetCountEl.textContent = "0";
     if (asbCountEl) asbCountEl.textContent = "0";
@@ -589,7 +587,17 @@ function render() {
 // ---------- Init ----------
 
 document.addEventListener("DOMContentLoaded", () => {
-  // grab engagement / incident elements
+  // Grab elements once DOM is ready
+  todayLabelEl = document.getElementById("todayLabel");
+  shiftStatusEl = document.getElementById("shiftStatus");
+  shiftTimesEl = document.getElementById("shiftTimes");
+  startShiftBtn = document.getElementById("startShiftBtn");
+  endShiftBtn = document.getElementById("endShiftBtn");
+  resetDataBtn = document.getElementById("resetDataBtn");
+  patrolsContainer = document.getElementById("patrolsContainer");
+  summaryContainer = document.getElementById("summaryContainer");
+  headerBadgeEl = document.querySelector(".header-badge");
+
   engagementCountEl = document.getElementById("engagementCount");
   engagementMinusBtn = document.getElementById("engagementMinusBtn");
   engagementPlusBtn = document.getElementById("engagementPlusBtn");
