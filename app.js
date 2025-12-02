@@ -64,7 +64,7 @@ function setCurrentEngagements(newValue) {
   const safe = Math.max(0, Number.isFinite(newValue) ? newValue : 0);
   state.currentShift.engagements = safe;
   saveState();
-  renderShiftSection(); // only need to refresh shift area & engagement controls
+  renderShiftSection(); // refresh shift + engagement bits
 }
 
 // ---------- Persistence ----------
@@ -102,7 +102,7 @@ function saveState() {
   }
 }
 
-// ---------- DOM refs ----------
+// ---------- DOM refs (declared, not yet assigned) ----------
 
 const todayLabelEl = document.getElementById("todayLabel");
 const shiftStatusEl = document.getElementById("shiftStatus");
@@ -114,10 +114,10 @@ const patrolsContainer = document.getElementById("patrolsContainer");
 const summaryContainer = document.getElementById("summaryContainer");
 const headerBadgeEl = document.querySelector(".header-badge");
 
-// New engagement DOM refs
-const engagementCountEl = document.getElementById("engagementCount");
-const engagementMinusBtn = document.getElementById("engagementMinusBtn");
-const engagementPlusBtn = document.getElementById("engagementPlusBtn");
+// Engagement elements will be populated after DOM is fully ready
+let engagementCountEl;
+let engagementMinusBtn;
+let engagementPlusBtn;
 
 // ---------- Actions ----------
 
@@ -496,6 +496,11 @@ function render() {
 // ---------- Init ----------
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Now that DOM is ready, grab engagement elements and wire events
+  engagementCountEl = document.getElementById("engagementCount");
+  engagementMinusBtn = document.getElementById("engagementMinusBtn");
+  engagementPlusBtn = document.getElementById("engagementPlusBtn");
+
   loadState();
   render();
 
