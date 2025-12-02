@@ -20,7 +20,7 @@
     </header>
 
     <main class="app-main">
-            <!-- Shift Controls -->
+                  <!-- Shift Controls -->
       <section class="card shift-card">
         <div class="card-header">
           <h2>Current Shift</h2>
@@ -79,9 +79,15 @@
               <button id="asbPlusBtn" class="btn small primary">+</button>
             </div>
           </div>
+
+          <!-- Notes button -->
+          <div class="button-row" style="margin-top: 0.5rem;">
+            <button id="openNotesBtn" class="btn ghost">
+              Open shift notes
+            </button>
+          </div>
         </div>
       </section>
-
 
       <!-- Patrol Slots -->
       <section class="card">
@@ -105,6 +111,46 @@
       </section>
     </main>
   </div>
+
+    <!-- Notes Modal -->
+  <div id="notesModal" class="modal-backdrop hidden">
+    <div class="modal-notes">
+      <div class="modal-header">
+        <h2>Shift notes</h2>
+        <button id="closeNotesBtn" class="btn small ghost">Close</button>
+      </div>
+
+      <div class="notes-toolbar">
+        <button id="toggleNotesLockBtn" class="btn small ghost">
+          🔒 Locked
+        </button>
+        <span class="notes-hint">
+          Notes are saved with this shift. Unlock to edit or delete entries. New notes
+          are always timestamped.
+        </span>
+      </div>
+
+      <div class="notes-layout">
+        <div class="notes-new">
+          <label for="newNoteText">New note</label>
+          <textarea
+            id="newNoteText"
+            rows="3"
+            placeholder="Type a quick note here (e.g. 'Street drinkers moved on from Market Place')"
+          ></textarea>
+          <button id="addNoteBtn" class="btn small primary">Add note</button>
+        </div>
+
+        <div id="notesList" class="notes-list">
+          <!-- Notes will be rendered here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
 
   <script src="app.js"></script>
 </body>

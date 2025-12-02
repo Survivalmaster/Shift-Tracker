@@ -31,6 +31,17 @@ function formatTime(dateString) {
   });
 }
 
+function formatDateTime(dateString) {
+  if (!dateString) return "-";
+  const d = new Date(dateString);
+  return d.toLocaleString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    day: "2-digit",
+    month: "short",
+  });
+}
+
 function formatDuration(ms) {
   if (!ms || ms <= 0) return "0m";
   const totalSeconds = Math.floor(ms / 1000);
@@ -54,6 +65,18 @@ function getPatrolDurationMs(patrol) {
 
 function safeCounter(value) {
   return typeof value === "number" && !isNaN(value) && value >= 0 ? value : 0;
+}
+
+// ---------- Notes helpers ----------
+
+function ensureNotesStructure(shift) {
+  if (!shift) return;
+  if (!Array.isArray(shift.notes)) {
+    shift.notes = [];
+  }
+  if (typeof shift.notesLocked !== "boolean") {
+    shift.notesLocked = true; // default locked
+  }
 }
 
 // ---------- Counter helpers ----------
@@ -115,6 +138,7 @@ function loadState() {
         if (typeof state.currentShift.asbIncidents !== "number") {
           state.currentShift.asbIncidents = 0;
         }
+        ensureNotesStructure(state.currentShift);
       }
       if (state.lastCompletedShift) {
         if (typeof state.lastCompletedShift.engagements !== "number") {
@@ -126,6 +150,7 @@ function loadState() {
         if (typeof state.lastCompletedShift.asbIncidents !== "number") {
           state.lastCompletedShift.asbIncidents = 0;
         }
+        ensureNotesStructure(state.lastCompletedShift);
       }
     }
   } catch (e) {
@@ -158,7 +183,16 @@ let engagementCountEl, engagementMinusBtn, engagementPlusBtn;
 let streetCountEl, streetMinusBtn, streetPlusBtn;
 let asbCountEl, asbMinusBtn, asbPlusBtn;
 
-// ---------- Actions ----------
+// Notes UI
+let openNotesBtn;
+let notesModal;
+let closeNotesBtn;
+let toggleNotesLockBtn;
+let newNoteTextEl;
+let addNoteBtn;
+let notesListEl;
+
+// ---------- Actions: Shifts & patrols ----------
 
 function startShift() {
   if (state.currentShift && !state.currentShift.endTime) {
@@ -176,6 +210,8 @@ function startShift() {
     engagements: 0,
     streetDrinkers: 0,
     asbIncidents: 0,
+    notes: [],
+    notesLocked: true,
     patrols: Array.from({ length: 5 }).map((_, idx) => ({
       index: idx + 1,
       startTime: null,
@@ -264,7 +300,8 @@ function resetAllData() {
   render();
 }
 
-// Engagement events
+// ---------- Actions: Counters ----------
+
 function incrementEngagements() {
   const current = getCurrentEngagements();
   setCurrentEngagements(current + 1);
@@ -275,7 +312,6 @@ function decrementEngagements() {
   setCurrentEngagements(current - 1);
 }
 
-// Street drinkers events
 function incrementStreetDrinkers() {
   const current = getCurrentStreetDrinkers();
   setCurrentStreetDrinkers(current + 1);
@@ -286,7 +322,6 @@ function decrementStreetDrinkers() {
   setCurrentStreetDrinkers(current - 1);
 }
 
-// ASB incidents events
 function incrementAsbIncidents() {
   const current = getCurrentAsbIncidents();
   setCurrentAsbIncidents(current + 1);
@@ -295,6 +330,65 @@ function decrementAsbIncidents() {
   const current = getCurrentAsbIncidents();
   if (current <= 0) return;
   setCurrentAsbIncidents(current - 1);
+}
+
+// ---------- Actions: Notes ----------
+
+function openNotesModal() {
+  if (!state.currentShift) {
+    alert("No active shift. Start a shift to add notes.");
+    return;
+  }
+  ensureNotesStructure(state.currentShift);
+  renderNotesModal();
+  notesModal.classList.remove("hidden");
+}
+
+function closeNotesModal() {
+  notesModal.classList.add("hidden");
+}
+
+function toggleNotesLock() {
+  if (!state.currentShift) return;
+  state.currentShift.notesLocked = !state.currentShift.notesLocked;
+  saveState();
+  renderNotesModal();
+}
+
+function addNote() {
+  if (!state.currentShift) return;
+  ensureNotesStructure(state.currentShift);
+  const text = (newNoteTextEl.value || "").trim();
+  if (!text) return;
+
+  state.currentShift.notes.push({
+    id: Date.now().toString(),
+    timestamp: nowIso(),
+    text,
+  });
+
+  newNoteTextEl.value = "";
+  saveState();
+  renderNotesModal();
+}
+
+function updateNoteText(id, newText) {
+  if (!state.currentShift) return;
+  const notes = state.currentShift.notes || [];
+  const note = notes.find((n) => n.id === id);
+  if (!note) return;
+  note.text = newText;
+  saveState();
+}
+
+function deleteNote(id) {
+  if (!state.currentShift) return;
+  const notes = state.currentShift.notes || [];
+  const index = notes.findIndex((n) => n.id === id);
+  if (index === -1) return;
+  notes.splice(index, 1);
+  saveState();
+  renderNotesModal();
 }
 
 // ---------- Rendering ----------
@@ -334,6 +428,8 @@ function renderShiftSection() {
     if (streetPlusBtn) streetPlusBtn.disabled = true;
     if (asbMinusBtn) asbMinusBtn.disabled = true;
     if (asbPlusBtn) asbPlusBtn.disabled = true;
+
+    if (openNotesBtn) openNotesBtn.disabled = true;
   } else {
     let html = `
       <p><strong>Date:</strong> ${formatDate(shift.startTime)}</p>
@@ -379,6 +475,8 @@ function renderShiftSection() {
     if (asbMinusBtn) {
       asbMinusBtn.disabled = shiftEnded || asb <= 0;
     }
+
+    if (openNotesBtn) openNotesBtn.disabled = false;
   }
 
   const hasAnyData = state.currentShift || state.lastCompletedShift;
@@ -564,17 +662,86 @@ function renderSummary() {
       <span class="label">ASB incidents (this shift)</span>
       <span class="value">${asb}</span>
     </div>
-
-    <div class="summary-highlight">
-      <strong>Summary:</strong>
-      You spent <strong>${formatDuration(
-        totalPatrolMs
-      )}</strong> actively on patrols and recorded
-      <strong>${engagements}</strong> public engagement(s),
-      <strong>${street}</strong> street drinker interaction(s), and
-      <strong>${asb}</strong> ASB incident(s) this shift.
-    </div>
   `;
+}
+
+// --- Notes modal rendering ---
+
+function renderNotesModal() {
+  if (!state.currentShift) return;
+  ensureNotesStructure(state.currentShift);
+
+  const { notes, notesLocked } = state.currentShift;
+
+  // Lock button label
+  if (toggleNotesLockBtn) {
+    toggleNotesLockBtn.textContent = notesLocked
+      ? "🔒 Locked"
+      : "🔓 Unlocked for editing";
+  }
+
+  // Enable / disable new-note area
+  if (newNoteTextEl) {
+    newNoteTextEl.disabled = notesLocked;
+  }
+  if (addNoteBtn) {
+    addNoteBtn.disabled = notesLocked;
+  }
+
+  // Render notes list
+  notesListEl.innerHTML = "";
+
+  if (!notes || notes.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "notes-empty";
+    empty.textContent = "No notes yet. Add your first note on the left.";
+    notesListEl.appendChild(empty);
+    return;
+  }
+
+  notes.forEach((note) => {
+    const item = document.createElement("div");
+    item.className = "note-item";
+
+    const header = document.createElement("div");
+    header.className = "note-header";
+
+    const ts = document.createElement("span");
+    ts.className = "note-timestamp";
+    ts.textContent = formatDateTime(note.timestamp);
+
+    const actions = document.createElement("div");
+    actions.className = "note-actions";
+
+    if (!notesLocked) {
+      const delBtn = document.createElement("button");
+      delBtn.className = "btn small ghost";
+      delBtn.textContent = "Delete";
+      delBtn.addEventListener("click", () => deleteNote(note.id));
+      actions.appendChild(delBtn);
+    }
+
+    header.appendChild(ts);
+    header.appendChild(actions);
+    item.appendChild(header);
+
+    if (notesLocked) {
+      const text = document.createElement("div");
+      text.className = "note-text";
+      text.textContent = note.text;
+      item.appendChild(text);
+    } else {
+      const textarea = document.createElement("textarea");
+      textarea.className = "note-textarea";
+      textarea.value = note.text;
+      textarea.addEventListener("input", (e) =>
+        updateNoteText(note.id, e.target.value)
+      );
+      item.appendChild(textarea);
+    }
+
+    notesListEl.appendChild(item);
+  });
 }
 
 function render() {
@@ -587,7 +754,7 @@ function render() {
 // ---------- Init ----------
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Grab elements once DOM is ready
+  // Core refs
   todayLabelEl = document.getElementById("todayLabel");
   shiftStatusEl = document.getElementById("shiftStatus");
   shiftTimesEl = document.getElementById("shiftTimes");
@@ -598,6 +765,7 @@ document.addEventListener("DOMContentLoaded", () => {
   summaryContainer = document.getElementById("summaryContainer");
   headerBadgeEl = document.querySelector(".header-badge");
 
+  // Counters
   engagementCountEl = document.getElementById("engagementCount");
   engagementMinusBtn = document.getElementById("engagementMinusBtn");
   engagementPlusBtn = document.getElementById("engagementPlusBtn");
@@ -610,13 +778,24 @@ document.addEventListener("DOMContentLoaded", () => {
   asbMinusBtn = document.getElementById("asbMinusBtn");
   asbPlusBtn = document.getElementById("asbPlusBtn");
 
+  // Notes
+  openNotesBtn = document.getElementById("openNotesBtn");
+  notesModal = document.getElementById("notesModal");
+  closeNotesBtn = document.getElementById("closeNotesBtn");
+  toggleNotesLockBtn = document.getElementById("toggleNotesLockBtn");
+  newNoteTextEl = document.getElementById("newNoteText");
+  addNoteBtn = document.getElementById("addNoteBtn");
+  notesListEl = document.getElementById("notesList");
+
   loadState();
   render();
 
+  // Shift controls
   startShiftBtn.addEventListener("click", startShift);
   endShiftBtn.addEventListener("click", endShift);
   resetDataBtn.addEventListener("click", resetAllData);
 
+  // Counters
   if (engagementPlusBtn) engagementPlusBtn.addEventListener("click", incrementEngagements);
   if (engagementMinusBtn) engagementMinusBtn.addEventListener("click", decrementEngagements);
 
@@ -625,4 +804,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (asbPlusBtn) asbPlusBtn.addEventListener("click", incrementAsbIncidents);
   if (asbMinusBtn) asbMinusBtn.addEventListener("click", decrementAsbIncidents);
+
+  // Notes events
+  if (openNotesBtn) openNotesBtn.addEventListener("click", openNotesModal);
+  if (closeNotesBtn) closeNotesBtn.addEventListener("click", closeNotesModal);
+  if (toggleNotesLockBtn) toggleNotesLockBtn.addEventListener("click", toggleNotesLock);
+  if (addNoteBtn) addNoteBtn.addEventListener("click", addNote);
+
+  // Close modal on backdrop click
+  if (notesModal) {
+    notesModal.addEventListener("click", (e) => {
+      if (e.target === notesModal) {
+        closeNotesModal();
+      }
+    });
+  }
 });
