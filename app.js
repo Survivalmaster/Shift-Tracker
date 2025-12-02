@@ -52,6 +52,21 @@ function getPatrolDurationMs(patrol) {
   return new Date(patrol.endTime) - new Date(patrol.startTime);
 }
 
+// Engagement helpers
+function getCurrentEngagements() {
+  if (!state.currentShift) return 0;
+  const value = state.currentShift.engagements;
+  return typeof value === "number" && !isNaN(value) && value >= 0 ? value : 0;
+}
+
+function setCurrentEngagements(newValue) {
+  if (!state.currentShift || state.currentShift.endTime) return;
+  const safe = Math.max(0, Number.isFinite(newValue) ? newValue : 0);
+  state.currentShift.engagements = safe;
+  saveState();
+  renderShiftSection(); // only need to refresh shift area & engagement controls
+}
+
 // ---------- Persistence ----------
 
 function loadState() {
@@ -62,6 +77,17 @@ function loadState() {
     if (parsed && typeof parsed === "object") {
       state.currentShift = parsed.currentShift || null;
       state.lastCompletedShift = parsed.lastCompletedShift || null;
+
+      // Backwards-compat: ensure engagements exist
+      if (state.currentShift && typeof state.currentShift.engagements !== "number") {
+        state.currentShift.engagements = 0;
+      }
+      if (
+        state.lastCompletedShift &&
+        typeof state.lastCompletedShift.engagements !== "number"
+      ) {
+        state.lastCompletedShift.engagements = 0;
+      }
     }
   } catch (e) {
     console.warn("Failed to load state:", e);
@@ -88,6 +114,11 @@ const patrolsContainer = document.getElementById("patrolsContainer");
 const summaryContainer = document.getElementById("summaryContainer");
 const headerBadgeEl = document.querySelector(".header-badge");
 
+// New engagement DOM refs
+const engagementCountEl = document.getElementById("engagementCount");
+const engagementMinusBtn = document.getElementById("engagementMinusBtn");
+const engagementPlusBtn = document.getElementById("engagementPlusBtn");
+
 // ---------- Actions ----------
 
 function startShift() {
@@ -103,6 +134,7 @@ function startShift() {
     date: dateOnly,
     startTime: now,
     endTime: null,
+    engagements: 0,
     patrols: Array.from({ length: 5 }).map((_, idx) => ({
       index: idx + 1,
       startTime: null,
@@ -191,6 +223,18 @@ function resetAllData() {
   render();
 }
 
+// Engagement events
+function incrementEngagements() {
+  const current = getCurrentEngagements();
+  setCurrentEngagements(current + 1);
+}
+
+function decrementEngagements() {
+  const current = getCurrentEngagements();
+  if (current <= 0) return;
+  setCurrentEngagements(current - 1);
+}
+
 // ---------- Rendering ----------
 
 function renderHeader() {
@@ -217,6 +261,10 @@ function renderShiftSection() {
     shiftTimesEl.innerHTML = `<p>No active shift. Tap <strong>Start Shift</strong> to begin your day.</p>`;
     startShiftBtn.disabled = false;
     endShiftBtn.disabled = true;
+
+    if (engagementCountEl) engagementCountEl.textContent = "0";
+    if (engagementMinusBtn) engagementMinusBtn.disabled = true;
+    if (engagementPlusBtn) engagementPlusBtn.disabled = true;
   } else {
     let html = `
       <p><strong>Date:</strong> ${formatDate(shift.startTime)}</p>
@@ -236,6 +284,18 @@ function renderShiftSection() {
     shiftTimesEl.innerHTML = html;
     startShiftBtn.disabled = !!shift && !shift.endTime;
     endShiftBtn.disabled = !!shift.endTime || !shift;
+
+    // Engagement controls
+    const engagements = getCurrentEngagements();
+    if (engagementCountEl) engagementCountEl.textContent = engagements.toString();
+
+    const shiftEnded = !!shift.endTime;
+    if (engagementPlusBtn) {
+      engagementPlusBtn.disabled = shiftEnded;
+    }
+    if (engagementMinusBtn) {
+      engagementMinusBtn.disabled = shiftEnded || engagements <= 0;
+    }
   }
 
   // Enable/disable reset button based on whether there's anything to clear
@@ -384,6 +444,8 @@ function renderSummary() {
     patrolLines = `<p class="muted">No patrols were started during this shift.</p>`;
   }
 
+  const engagements = typeof shift.engagements === "number" ? shift.engagements : 0;
+
   summaryContainer.innerHTML = `
     <div class="summary-row">
       <span class="label">Date</span>
@@ -410,11 +472,16 @@ function renderSummary() {
       <span class="value">${formatDuration(totalPatrolMs)}</span>
     </div>
 
+    <div class="summary-row">
+      <span class="label">Public engagements (this shift)</span>
+      <span class="value">${engagements}</span>
+    </div>
+
     <div class="summary-highlight">
       <strong>Summary:</strong>
       You spent <strong>${formatDuration(
         totalPatrolMs
-      )}</strong> actively on patrols this shift.
+      )}</strong> actively on patrols and recorded <strong>${engagements}</strong> public engagement(s) this shift.
     </div>
   `;
 }
@@ -435,4 +502,11 @@ document.addEventListener("DOMContentLoaded", () => {
   startShiftBtn.addEventListener("click", startShift);
   endShiftBtn.addEventListener("click", endShift);
   resetDataBtn.addEventListener("click", resetAllData);
+
+  if (engagementPlusBtn) {
+    engagementPlusBtn.addEventListener("click", incrementEngagements);
+  }
+  if (engagementMinusBtn) {
+    engagementMinusBtn.addEventListener("click", decrementEngagements);
+  }
 });

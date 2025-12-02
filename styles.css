@@ -417,3 +417,49 @@ body {
   color: var(--text-muted);
   font-size: 0.82rem;
 }
+
+/* Engagement panel ---------------------------------------------------- */
+
+.engagement-panel {
+  margin: 0.75rem 0 0.9rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: var(--radius-card);
+  border: 1px solid #e0e0e0;
+  background: #f8f8f8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.engagement-label-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.engagement-label-group .label-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.engagement-label-group .label-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.engagement-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.engagement-count {
+  min-width: 2.2rem;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-main);
+}

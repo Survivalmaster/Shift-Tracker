@@ -8,7 +8,7 @@
 </head>
 <body>
   <div class="app-shell">
-    <header class="app-header glass">
+    <header class="app-header">
       <div class="title-wrap">
         <h1>Shift Tracker</h1>
         <p id="todayLabel" class="subtitle"></p>
@@ -21,7 +21,7 @@
 
     <main class="app-main">
       <!-- Shift Controls -->
-      <section class="card glass shift-card">
+      <section class="card shift-card">
         <div class="card-header">
           <h2>Current Shift</h2>
         </div>
@@ -29,10 +29,24 @@
           <div id="shiftTimes" class="shift-times">
             <p>Start a shift to begin tracking.</p>
           </div>
+
+          <!-- Public engagements counter -->
+          <div class="engagement-panel">
+            <div class="engagement-label-group">
+              <span class="label-title">Public engagements this shift</span>
+              <span class="label-hint">Use + / − to keep a simple count.</span>
+            </div>
+            <div class="engagement-controls">
+              <button id="engagementMinusBtn" class="btn small ghost">−</button>
+              <span id="engagementCount" class="engagement-count">0</span>
+              <button id="engagementPlusBtn" class="btn small primary">+</button>
+            </div>
+          </div>
+
           <div class="button-row">
             <button id="startShiftBtn" class="btn primary">Start Shift</button>
             <button id="endShiftBtn" class="btn danger" disabled>Finish Shift</button>
-            <button id="resetDataBtn" class="btn ghost">Reset All Data</button>
+            <button id="resetDataBtn" class="btn ghost" disabled>Reset All Data</button>
           </div>
           <p class="hint">
             You can only have one active shift at a time. Within a shift you’ll get
@@ -42,7 +56,7 @@
       </section>
 
       <!-- Patrol Slots -->
-      <section class="card glass">
+      <section class="card">
         <div class="card-header">
           <h2>Patrols this Shift</h2>
           <span class="chip">Max 5</span>
@@ -53,7 +67,7 @@
       </section>
 
       <!-- Summary -->
-      <section class="card glass summary-card">
+      <section class="card summary-card">
         <div class="card-header">
           <h2>Shift Summary</h2>
         </div>
