@@ -20,7 +20,7 @@
     </header>
 
     <main class="app-main">
-                  <!-- Shift Controls -->
+      <!-- Shift Controls -->
       <section class="card shift-card">
         <div class="card-header">
           <h2>Current Shift</h2>
@@ -104,6 +104,10 @@
       <section class="card summary-card">
         <div class="card-header">
           <h2>Shift Summary</h2>
+          <div class="button-row summary-actions">
+            <button id="copySummaryBtn" class="btn small ghost" disabled>Copy</button>
+            <button id="emailSummaryBtn" class="btn small primary" disabled>Email</button>
+          </div>
         </div>
         <div id="summaryContainer" class="card-body">
           <p>No completed shift yet. Finish a shift to see your summary here.</p>
@@ -112,7 +116,7 @@
     </main>
   </div>
 
-    <!-- Notes Modal -->
+  <!-- Notes Modal -->
   <div id="notesModal" class="modal-backdrop hidden">
     <div class="modal-notes">
       <div class="modal-header">
@@ -142,15 +146,11 @@
         </div>
 
         <div id="notesList" class="notes-list">
-          <!-- Notes will be rendered here -->
+          <!-- Notes rendered here -->
         </div>
       </div>
     </div>
   </div>
-
-  <script src="app.js"></script>
-</body>
-</html>
 
   <script src="app.js"></script>
 </body>

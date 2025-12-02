@@ -1,4 +1,5 @@
 const STORAGE_KEY = "shift_tracker_state_v1";
+const DEFAULT_EMAIL = "james.meeds@yahoo.co.uk";
 
 const state = {
   currentShift: null,
@@ -191,6 +192,10 @@ let toggleNotesLockBtn;
 let newNoteTextEl;
 let addNoteBtn;
 let notesListEl;
+
+// Summary actions
+let copySummaryBtn;
+let emailSummaryBtn;
 
 // ---------- Actions: Shifts & patrols ----------
 
@@ -389,6 +394,128 @@ function deleteNote(id) {
   notes.splice(index, 1);
   saveState();
   renderNotesModal();
+}
+
+// ---------- Summary text / copy / email ----------
+
+function buildShiftSummaryText(shift) {
+  if (!shift) return "No completed shift.";
+
+  const shiftDurationMs =
+    new Date(shift.endTime) - new Date(shift.startTime || shift.endTime);
+
+  let totalPatrolMs = 0;
+  (shift.patrols || []).forEach((p) => {
+    totalPatrolMs += getPatrolDurationMs(p);
+  });
+
+  const engagements = safeCounter(shift.engagements);
+  const street = safeCounter(shift.streetDrinkers);
+  const asb = safeCounter(shift.asbIncidents);
+
+  ensureNotesStructure(shift);
+  const notes = shift.notes || [];
+
+  const lines = [];
+
+  lines.push(`Shift summary - ${formatDate(shift.startTime)}`);
+  lines.push(
+    `Shift: ${formatTime(shift.startTime)} – ${formatTime(
+      shift.endTime
+    )} (${formatDuration(shiftDurationMs)})`
+  );
+  lines.push("");
+
+  // Patrol breakdown
+  lines.push("Patrols:");
+  let anyPatrol = false;
+  (shift.patrols || []).forEach((p) => {
+    const ms = getPatrolDurationMs(p);
+    if (!p.startTime && !p.endTime) return;
+    lines.push(`- Patrol ${p.index}: ${formatDuration(ms)}`);
+    anyPatrol = true;
+  });
+  if (!anyPatrol) {
+    lines.push("- No patrols recorded this shift.");
+  }
+
+  lines.push("");
+  lines.push("Activity totals:");
+  lines.push(`- Public engagements: ${engagements}`);
+  lines.push(`- Street drinkers:   ${street}`);
+  lines.push(`- ASB incidents:     ${asb}`);
+  lines.push(`- Time in patrols:   ${formatDuration(totalPatrolMs)}`);
+
+  // Notes
+  lines.push("");
+  if (!notes.length) {
+    lines.push("Notes: (none recorded)");
+  } else {
+    lines.push(`Notes (${notes.length}):`);
+    notes.forEach((note) => {
+      lines.push(
+        `- [${formatTime(note.timestamp)}] ${note.text.replace(/\s+/g, " ").trim()}`
+      );
+    });
+  }
+
+  return lines.join("\n");
+}
+
+function fallbackCopyText(text) {
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    document.execCommand("copy");
+    alert("Shift summary copied to clipboard.");
+  } catch (e) {
+    alert("Unable to copy automatically. You can copy it from the email body instead.");
+  }
+  document.body.removeChild(textarea);
+}
+
+function copyShiftSummary() {
+  const shift = state.lastCompletedShift;
+  if (!shift) {
+    alert("No completed shift to copy yet.");
+    return;
+  }
+
+  const text = buildShiftSummaryText(shift);
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      () => {
+        alert("Shift summary copied to clipboard.");
+      },
+      () => {
+        fallbackCopyText(text);
+      }
+    );
+  } else {
+    fallbackCopyText(text);
+  }
+}
+
+function emailShiftSummary() {
+  const shift = state.lastCompletedShift;
+  if (!shift) {
+    alert("No completed shift to email yet.");
+    return;
+  }
+
+  const subject = `Shift summary - ${formatDate(shift.startTime)}`;
+  const body = buildShiftSummaryText(shift);
+
+  const mailto = `mailto:${DEFAULT_EMAIL}?subject=${encodeURIComponent(
+    subject
+  )}&body=${encodeURIComponent(body)}`;
+
+  window.location.href = mailto;
 }
 
 // ---------- Rendering ----------
@@ -593,8 +720,14 @@ function renderSummary() {
   if (!shift) {
     summaryContainer.innerHTML =
       "<p>No completed shift yet. Finish a shift to see your totals.</p>";
+
+    if (copySummaryBtn) copySummaryBtn.disabled = true;
+    if (emailSummaryBtn) emailSummaryBtn.disabled = true;
     return;
   }
+
+  if (copySummaryBtn) copySummaryBtn.disabled = false;
+  if (emailSummaryBtn) emailSummaryBtn.disabled = false;
 
   const shiftDurationMs =
     new Date(shift.endTime) - new Date(shift.startTime || shift.endTime);
@@ -661,6 +794,16 @@ function renderSummary() {
     <div class="summary-row">
       <span class="label">ASB incidents (this shift)</span>
       <span class="value">${asb}</span>
+    </div>
+
+    <div class="summary-highlight">
+      <strong>Summary:</strong>
+      You spent <strong>${formatDuration(
+        totalPatrolMs
+      )}</strong> actively on patrols and recorded
+      <strong>${engagements}</strong> public engagement(s),
+      <strong>${street}</strong> street drinker interaction(s), and
+      <strong>${asb}</strong> ASB incident(s) this shift.
     </div>
   `;
 }
@@ -787,6 +930,10 @@ document.addEventListener("DOMContentLoaded", () => {
   addNoteBtn = document.getElementById("addNoteBtn");
   notesListEl = document.getElementById("notesList");
 
+  // Summary action buttons
+  copySummaryBtn = document.getElementById("copySummaryBtn");
+  emailSummaryBtn = document.getElementById("emailSummaryBtn");
+
   loadState();
   render();
 
@@ -810,6 +957,10 @@ document.addEventListener("DOMContentLoaded", () => {
   if (closeNotesBtn) closeNotesBtn.addEventListener("click", closeNotesModal);
   if (toggleNotesLockBtn) toggleNotesLockBtn.addEventListener("click", toggleNotesLock);
   if (addNoteBtn) addNoteBtn.addEventListener("click", addNote);
+
+  // Summary actions
+  if (copySummaryBtn) copySummaryBtn.addEventListener("click", copyShiftSummary);
+  if (emailSummaryBtn) emailSummaryBtn.addEventListener("click", emailShiftSummary);
 
   // Close modal on backdrop click
   if (notesModal) {
